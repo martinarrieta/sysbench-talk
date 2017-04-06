@@ -1,0 +1,53 @@
+# Playbook to install sysbench from the source and also mysql 5.7 community
+# version to play with.
+---
+# file: playbook.yml
+- hosts: all
+  become: true
+  tasks:
+  - name: Install required packages to build sysbench
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - libtool
+      - unzip
+      - autoconf
+      - automake
+      - vim
+
+  - name: Import MySQL Repository GPG key
+    rpm_key:
+      state: present
+      key: http://dev.mysql.com/doc/refman/5.7/en/checking-gpg-signature.html
+
+  - name: Add MySQL 5.7 Community repository
+    yum_repository:
+      name: mysql57-community
+      description: MySQL 5.7 Community Server
+      file: mysql-community
+      baseurl: http://repo.mysql.com/yum/mysql-5.7-community/el/7/$basearch/
+      gpgcheck: yes
+
+  - name: Downloading sysbench from GitHub
+    unarchive:
+      src: https://github.com/akopytov/sysbench/archive/master.zip
+      dest: /opt/
+      copy: no
+      creates: /opt/sysbench-master/
+
+  - name: Install MySQL 5.7 server, client and devel
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - mysql-community-server
+      - mysql-community-client
+      - mysql-community-libs-compat
+      - mysql-community-devel
+
+  - name: Building sysbench source.
+    command: ./autogen.sh && ./configure && make && make install
+    args:
+      chdir: /opt/sysbench-master/
+      creates: /usr/local/bin/sysbench
