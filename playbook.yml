@@ -51,3 +51,11 @@
     args:
       chdir: /opt/sysbench-master/
       creates: /usr/local/bin/sysbench
+
+  - name: Copying test1.lua script
+    copy:
+      src: files/test1.lua
+      dest: /home/vagrant/test1.lua
+      owner: vagrant
+      group: vagrant
+      mode: "u=rwx,g=r,o=r"
